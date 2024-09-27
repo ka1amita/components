@@ -20,7 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
-class ToOneValidOrRevertSinglePassReducerTest {
+public class ToOneValidOrRevertSinglePassReducerTest {
   
   private record Fake() {
     
