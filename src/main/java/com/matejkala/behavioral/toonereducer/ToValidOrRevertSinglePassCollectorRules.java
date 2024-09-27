@@ -6,15 +6,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.function.Predicate;
+import java.util.stream.Collector;
 
-class ToValidOrRevertSinglePassRules<E> implements ToOneReducer<E> {
+class ToValidOrRevertSinglePassCollectorRules<E> implements ToOneReducer<E> {
   
-  private final Iterator<Predicate<E>> rules;
+  private final Iterator<Collector<E, Collection<E>, Collection<E>>>
+      rules;
   
   @SafeVarargs
-  ToValidOrRevertSinglePassRules(final Predicate<E>... rules) {
+  ToValidOrRevertSinglePassCollectorRules(
+      final Collector<E, Collection<E>, Collection<E>>... rules) {
     this.rules = Arrays.asList(rules).iterator();
   }
   
@@ -22,16 +23,16 @@ class ToValidOrRevertSinglePassRules<E> implements ToOneReducer<E> {
   public E reduce(final Collection<? extends E> elements) throws UnreducableException {
     final var reduced = reduceInt(elements);
     if (reduced.size() == 1) {
-      return reduced.getFirst();
+      return reduced.iterator().next();
     } else {
       throw UnreducableException.of(reduced.size());
     }
   }
   
-  List<E> reduceInt(Collection<? extends E> elements) throws UnreducableException {
-    List<E> remaining = new ArrayList<>(requireSizeAtLeast(2, elements));
+  Collection<? extends E> reduceInt(Collection<? extends E> elements) {
+    Collection<? extends E> remaining = new ArrayList<>(requireSizeAtLeast(2, elements));
     while (rules.hasNext()) {
-      final List<E> filtered = remaining.stream().filter(rules.next()).toList();
+      final Collection<? extends E> filtered = remaining.stream().collect(rules.next());
       if (filtered.size() == 1) {
         return filtered;
       }

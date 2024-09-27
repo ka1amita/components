@@ -1,8 +1,26 @@
 package com.matejkala.behavioral.toonereducer;
 
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
 
 interface ToOneReducer<E> {
+  
+  @SafeVarargs
+  static <E> ToOneReducer<E> of(Predicate<? super E>... rules) {
+    return new ToValidOrRevertSinglePassPredicateRules<>(rules);
+  }
+  
+  @SafeVarargs
+  static <E> ToOneReducer<E> of(Comparator<E> comparator, Predicate<? super E>... rules) {
+    return new ToValidOrRevertSinglePassPredicateRulesWithFinalComparator<>(comparator, rules);
+  }
+  
+  @SafeVarargs
+  static <E> ToOneReducer<E> of(Collector<E, Collection<E>, Collection<E>>... rules) {
+    return new ToValidOrRevertSinglePassCollectorRules<>(rules);
+  }
   
   E reduce(final Collection<? extends E> elements) throws UnreducableException;
   

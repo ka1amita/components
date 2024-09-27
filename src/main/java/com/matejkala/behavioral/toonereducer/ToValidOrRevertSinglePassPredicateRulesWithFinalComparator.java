@@ -6,14 +6,14 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Predicate;
 
-class ToValidOrRevertSinglePassRulesWithFinalComparator<E> extends
-    ToValidOrRevertSinglePassRules<E> {
+class ToValidOrRevertSinglePassPredicateRulesWithFinalComparator<E> extends
+    ToValidOrRevertSinglePassPredicateRules<E> {
   
   private final Comparator<E> comparator;
   
   @SafeVarargs
-  ToValidOrRevertSinglePassRulesWithFinalComparator(final Comparator<E> comparator,
-                                                    final Predicate<E>... rules) {
+  ToValidOrRevertSinglePassPredicateRulesWithFinalComparator(final Comparator<E> comparator,
+                                                             final Predicate<? super E>... rules) {
     super(rules);
     this.comparator = comparator;
   }
