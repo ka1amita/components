@@ -1,8 +1,10 @@
-package com.matejkala.behavioral;
+package com.matejkala.behavioral.toonereducer;
+
+import java.util.Collection;
 
 interface ToOneReducer<E> {
   
-  E reduce(final Iterable<? extends E> elements) throws UnreducableException;
+  E reduce(final Collection<? extends E> elements) throws UnreducableException;
   
   class UnreducableException extends Exception {
     

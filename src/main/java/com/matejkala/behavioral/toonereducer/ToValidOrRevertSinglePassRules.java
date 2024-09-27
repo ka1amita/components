@@ -1,10 +1,10 @@
-package com.matejkala.behavioral;
+package com.matejkala.behavioral.toonereducer;
 
-import static com.matejkala.validations.Validations.requireNotEmpty;
-import static java.util.Objects.requireNonNull;
+import static com.matejkala.validations.Validations.requireSizeAtLeast;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Predicate;
@@ -19,20 +19,17 @@ class ToValidOrRevertSinglePassRules<E> implements ToOneReducer<E> {
   }
   
   @Override
-  public E reduce(final Iterable<? extends E> elements) throws UnreducableException {
-    final List<E> remaining = new ArrayList<>();
-    requireNonNull(elements).forEach(remaining::add);
-    requireNotEmpty(remaining);
-    
-    final var reduced = reduceInt(remaining);
+  public E reduce(final Collection<? extends E> elements) throws UnreducableException {
+    final var reduced = reduceInt(elements);
     if (reduced.size() == 1) {
       return reduced.getFirst();
     } else {
-      throw UnreducableException.of(remaining.size());
+      throw UnreducableException.of(reduced.size());
     }
   }
   
-  protected List<E> reduceInt(List<E> remaining) throws UnreducableException {
+  List<E> reduceInt(Collection<? extends E> elements) throws UnreducableException {
+    List<E> remaining = new ArrayList<>(requireSizeAtLeast(2, elements));
     while (rules.hasNext()) {
       final List<E> filtered = remaining.stream().filter(rules.next()).toList();
       if (filtered.size() == 1) {
@@ -41,9 +38,6 @@ class ToValidOrRevertSinglePassRules<E> implements ToOneReducer<E> {
       if (filtered.size() > 1) {
         remaining = filtered;
       }
-    }
-    if (remaining.size() == 1) {
-      throw UnreducableException.of(1); // it is a single but invalid element
     }
     return remaining;
   }
