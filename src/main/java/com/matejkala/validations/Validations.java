@@ -52,4 +52,11 @@ public final class Validations {
     }
     return subject;
   }
+  
+  public static <C extends Collection<?>> C requireSizeAtLeast(final int min, final C subject) {
+    if (subject.size() < min) {
+      throw new IllegalArgumentException();
+    }
+    return subject;
+  }
 }
