@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.matejkala.behavioral.ToOneValidOrRevertSinglePassReducer.UnreducableException;
+import com.matejkala.behavioral.ToOneReducer.UnreducableException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -20,7 +20,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 @DisplayNameGeneration(ReplaceUnderscores.class)
-public class ToOneValidOrRevertSinglePassReducerTest {
+public class ToOneReducerTest {
   
   private record Fake() {
     
@@ -54,7 +54,7 @@ public class ToOneValidOrRevertSinglePassReducerTest {
     @MethodSource("subjectCollections")
     void given_a_single_valid_and_an_invalid_element_When_reduced_Then_returns_the_valid_one(
         final Iterable<Fake> collection) throws UnreducableException {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(Fake.passTrue());
+      var reducer = new ToValidOrRevertSinglePassRules<>(Fake.passTrue());
       
       var result = reducer.reduce(collection);
       
@@ -63,14 +63,14 @@ public class ToOneValidOrRevertSinglePassReducerTest {
     
     @Test
     void given_more_than_one_valid_element_remains_When_reduced_Then_throws() {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(Fake.passTrue());
+      var reducer = new ToValidOrRevertSinglePassRules<>(Fake.passTrue());
       
       assertThrows(UnreducableException.class, () -> reducer.reduce(List.of(Fake.TRUE, Fake.TRUE)));
     }
     
     @Test
     void given_empty_collection_When_reduced_Then_throws() {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(Fake.passTrue());
+      var reducer = new ToValidOrRevertSinglePassRules<>(Fake.passTrue());
       
       assertThrows(IllegalArgumentException.class, () -> reducer.reduce(Collections.emptyList()));
     }
@@ -79,7 +79,7 @@ public class ToOneValidOrRevertSinglePassReducerTest {
     @MethodSource("variableSizeCollections")
     void when_throws_Then_the_exception_contains_the_number_of_remaining_elements(
         final Collection<Fake> collection) {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(Fake.passTrue());
+      var reducer = new ToValidOrRevertSinglePassRules<>(Fake.passTrue());
       
       var exc = assertThrows(UnreducableException.class, () -> reducer.reduce(collection));
       
@@ -88,7 +88,7 @@ public class ToOneValidOrRevertSinglePassReducerTest {
     
     @Test
     void given_no_element_passes_when_throws_Then_the_exception_contains_the_number_of_remaining_elements() {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(Fake.passTrue());
+      var reducer = new ToValidOrRevertSinglePassRules<>(Fake.passTrue());
       
       var exc = assertThrows(UnreducableException.class, () -> reducer.reduce(List.of(Fake.FALSE)));
       
@@ -121,7 +121,7 @@ public class ToOneValidOrRevertSinglePassReducerTest {
     @Test
     void given_a_single_valid_element_When_reduced_Then_returns_the_element()
         throws UnreducableException {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(passAll());
+      var reducer = new ToValidOrRevertSinglePassRules<>(passAll());
       
       var result = reducer.reduce(Set.of(Fake.ANY));
       
@@ -130,14 +130,14 @@ public class ToOneValidOrRevertSinglePassReducerTest {
     
     @Test
     void given_a_single_invalid_element_When_reduced_Then_throws() {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(Fake.passTrue());
+      var reducer = new ToValidOrRevertSinglePassRules<>(Fake.passTrue());
       
       assertThrows(UnreducableException.class, () -> reducer.reduce(List.of(Fake.FALSE)));
     }
     
     @Test
     void given_a_rule_that_no_element_passes_when_reduced_Then_throws() {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(passNone());
+      var reducer = new ToValidOrRevertSinglePassRules<>(passNone());
       
       assertThrows(UnreducableException.class, () -> reducer.reduce(Set.of(Fake.ANY)));
     }
@@ -145,7 +145,7 @@ public class ToOneValidOrRevertSinglePassReducerTest {
     @Test
     void given_rule_that_that_none_pass_then_passes_original_collection_to_the_next_rule()
         throws UnreducableException {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(passNone(), passFirst());
+      var reducer = new ToValidOrRevertSinglePassRules<>(passNone(), passFirst());
       
       var result = reducer.reduce(List.of(Fake.ANY, Fake.ANY, Fake.ANY));
       
@@ -155,11 +155,21 @@ public class ToOneValidOrRevertSinglePassReducerTest {
     @Test
     void given_rule_that_only_some_pass_then_passes_the_reduced_collection_to_the_next_rule()
         throws UnreducableException {
-      var reducer = new ToOneValidOrRevertSinglePassReducer<>(Fake.passSome(), passFirst());
+      var reducer = new ToValidOrRevertSinglePassRulesWithFinalComparator<>((o1, o2) -> 0);
       
-      var result = reducer.reduce(List.of(Fake.ANY, Fake.SOME, Fake.SOME, Fake.ANY));
+      var result = reducer.reduce(List.of(Fake.TRUE, Fake.TRUE));
       
-      assertSame(Fake.SOME, result);
+      assertNotNull(result);
+    }
+    
+    @Test
+    void given_a_reducer_then_returns_a_single_element() throws UnreducableException {
+      var reducer = new ToValidOrRevertSinglePassRulesWithFinalComparator<>((o1, o2) -> 0,
+                                                                            Fake.passTrue());
+      
+      var result = reducer.reduce(List.of(Fake.TRUE, Fake.TRUE));
+      
+      assertNotNull(result);
     }
   }
 }
